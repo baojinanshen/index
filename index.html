@@ -1,544 +1,770 @@
-<html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>中小学题库生成器</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            primary: '#3B82F6',
-            secondary: '#10B981',
-            accent: '#F59E0B',
-            dark: '#1F2937',
-            light: '#F3F4F6'
-          },
-          fontFamily: {
-            sans: ['Inter', 'system-ui', 'sans-serif'],
-          },
-        },
-      }
-    }
-  </script>
-  <style type="text/tailwindcss">
-    @layer utilities {
-      .content-auto {
-        content-visibility: auto;
-      }
-      .text-shadow {
-        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      }
-      .transition-custom {
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      }
-      .print-container {
-        page-break-inside: avoid;
-      }
-    }
-  </style>
-  <style>
-    @media print {
-      body * {
-        visibility: hidden;
-        print-color-adjust: exact;
-      }
-      .print-area, .print-area * {
-        visibility: visible;
-      }
-      .print-area {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        padding: 1cm;
-      }
-      .no-print {
-        display: none !important;
-      }
-      .question {
-        page-break-inside: avoid;
-      }
-      @page {
-        size: A4;
-        margin: 1cm;
-      }
-    }
-  </style>
-</head>
-<body class="bg-gray-50 font-sans text-dark min-h-screen flex flex-col">
-  <!-- 导航栏 -->
-  <nav class="bg-white shadow-md sticky top-0 z-50 transition-all duration-300" id="navbar">
-    <div class="container mx-auto px-4 py-3 flex justify-between items-center">
-      <div class="flex items-center space-x-2">
-        <i class="fa fa-graduation-cap text-primary text-2xl"></i>
-        <span class="text-xl font-bold text-primary">幼小中学题库生成器</span>
-      </div>
-      <div class="hidden md:flex items-center space-x-8">
-        <a href="#" class="font-medium text-primary hover:text-primary/80 transition-colors">首页</a>
-        <a href="#features" class="font-medium text-gray-700 hover:text-primary transition-colors">功能介绍</a>
-        <a href="#generator" class="font-medium text-gray-700 hover:text-primary transition-colors">题库生成</a>
-        <a href="#about" class="font-medium text-gray-700 hover:text-primary transition-colors">关于我们</a>
-      </div>
-      <button class="md:hidden text-gray-700 focus:outline-none" id="mobile-menu-button">
-        <i class="fa fa-bars text-xl"></i>
-      </button>
-    </div>
-    <!-- 移动端菜单 -->
-    <div class="md:hidden hidden bg-white shadow-lg absolute w-full" id="mobile-menu">
-      <div class="container mx-auto px-4 py-3 flex flex-col space-y-3">
-        <a href="#" class="font-medium text-primary py-2 border-b border-gray-100">首页</a>
-        <a href="#features" class="font-medium text-gray-700 py-2 border-b border-gray-100 hover:text-primary transition-colors">功能介绍</a>
-        <a href="#generator" class="font-medium text-gray-700 py-2 border-b border-gray-100 hover:text-primary transition-colors">题库生成</a>
-        <a href="#about" class="font-medium text-gray-700 py-2 hover:text-primary transition-colors">关于我们</a>
-      </div>
-    </div>
-  </nav>
-
-  <!-- 英雄区 -->
-  <header class="relative bg-gradient-to-br from-primary/90 to-primary overflow-hidden">
-    <div class="absolute inset-0 bg-[url('https://picsum.photos/id/24/1920/1080')] bg-cover bg-center opacity-10"></div>
-    <div class="container mx-auto px-4 py-20 md:py-32 relative z-10">
-      <div class="max-w-3xl mx-auto text-center">
-        <h1 class="text-[clamp(2rem,5vw,3.5rem)] font-bold text-white mb-6 leading-tight text-shadow">轻松生成幼小中学各科目题库</h1>
-        <p class="text-[clamp(1rem,2vw,1.25rem)] text-white/90 mb-10 max-w-2xl mx-auto">
-          自定义选择年级、科目和题目数量，一键生成高质量题库，附带详细答案和解析
-        </p>
-        <div class="flex flex-col sm:flex-row justify-center gap-4">
-          <a href="#generator" class="bg-white text-primary font-medium px-8 py-3 rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300">
-            开始生成题库
-          </a>
-          <a href="#features" class="bg-transparent border-2 border-white text-white font-medium px-8 py-3 rounded-lg hover:bg-white/10 transition-all duration-300">
-            了解更多功能
-          </a>
-        </div>
-      </div>
-    </div>
-    <div class="absolute bottom-0 left-0 w-full overflow-hidden leading-0">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none" class="w-full h-[60px] md:h-[80px]">
-        <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V120H0V0C0,0,31,30,31,30z" fill="#F9FAFB"></path>
-      </svg>
-    </div>
-  </header>
-
-  <main class="flex-grow">
-    <!-- 功能介绍 -->
-    <section id="features" class="py-20 bg-gray-50">
-      <div class="container mx-auto px-4">
-        <div class="text-center mb-16">
-          <h2 class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold text-dark mb-4">强大功能，满足教学需求</h2>
-          <p class="text-gray-600 max-w-2xl mx-auto">我们的题库生成器提供了丰富的功能，帮助教师和学生高效创建和使用练习题</p>
-        </div>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          <!-- 功能卡片1 -->
-          <div class="bg-white rounded-xl shadow-lg p-8 transform hover:-translate-y-2 transition-all duration-300">
-            <div class="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mb-6">
-              <i class="fa fa-book text-primary text-2xl"></i>
-            </div>
-            <h3 class="text-xl font-bold mb-3">全学科覆盖</h3>
-            <p class="text-gray-600">从幼儿园到小学六年级的所有主要科目，包括语文、数学、英语、科学等，满足多样化学习需求。</p>
-          </div>
+<!DOCTYPE html>
+    <html lang="zh-CN">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>中小学题库生成器</title>
+      <script src="https://cdn.tailwindcss.com"></script>
+      <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js"></script>
+      <script>
+        tailwind.config = {
+          theme: {
+            extend: {
+              colors: {
+                primary: '#3B82F6',
+                secondary: '#10B981',
+                accent: '#F59E0B',
+                dark: '#1F2937',
+                light: '#F3F4F6'
+              },
+              fontFamily: {
+                sans: ['Inter', 'system-ui', 'sans-serif'],
+              },
+            },
+          }
+        }
+      </script>
+      <style type="text/tailwindcss">
+        @layer utilities {
+          .content-auto {
+            content-visibility: auto;
+          }
+          .text-shadow {
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+          }
+          .transition-custom {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          }
+          .paper-container {
+            width: 210mm;
+            min-height: 297mm;
+            padding: 20mm;
+            margin: 10mm auto;
+            background-color: white;
+            box-shadow: 0 0 5px rgba(0,0,0,0.1);
+          }
+          .page-break {
+            page-break-after: always;
+          }
+        }
+      </style>
+      <script>
+        document.addEventListener('DOMContentLoaded', function () {
+          const gradeBtns = document.querySelectorAll('.grade-btn');
+          const stepBtns = document.querySelectorAll('.step-btn');
+          const stepContents = document.querySelectorAll('.step-content');
+          const nextToStep2 = document.getElementById('next-to-step-2');
+          const nextToStep3 = document.getElementById('next-to-step-3');
+          const backToStep1 = document.getElementById('back-to-step-1');
+          const backToStep2 = document.getElementById('back-to-step-2');
+          const nextToStep4 = document.getElementById('next-to-step-4');
+          const subjectsContainer = document.getElementById('subjects-container');
+          const selectedGradeDisplay = document.getElementById('selected-grade-display');
+          const selectedSubjectsDisplay = document.getElementById('selected-subjects-display');
+          const questionCountInput = document.getElementById('question-count');
+          const questionTypeCheckboxes = document.querySelectorAll('.question-type-checkbox');
+          const difficultySliders = document.querySelectorAll('.difficulty-slider');
+          const easyValue = document.getElementById('easy-value');
+          const mediumValue = document.getElementById('medium-value');
+          const hardValue = document.getElementById('hard-value');
+          const fileFormatSelect = document.getElementById('file-format');
           
-          <!-- 功能卡片2 -->
-          <div class="bg-white rounded-xl shadow-lg p-8 transform hover:-translate-y-2 transition-all duration-300">
-            <div class="w-14 h-14 bg-secondary/10 rounded-full flex items-center justify-center mb-6">
-              <i class="fa fa-sliders text-secondary text-2xl"></i>
-            </div>
-            <h3 class="text-xl font-bold mb-3">灵活定制</h3>
-            <p class="text-gray-600">自由选择年级、科目和题目数量，精准匹配教学进度和学生水平，打造个性化学习材料。</p>
-          </div>
+          let selectedGrade = null;
+          let selectedSubjects = [];
+          let currentQuestionBank = '';
           
-          <!-- 功能卡片3 -->
-          <div class="bg-white rounded-xl shadow-lg p-8 transform hover:-translate-y-2 transition-all duration-300">
-            <div class="w-14 h-14 bg-accent/10 rounded-full flex items-center justify-center mb-6">
-              <i class="fa fa-file-text-o text-accent text-2xl"></i>
-            </div>
-            <h3 class="text-xl font-bold mb-3">详细解析</h3>
-            <p class="text-gray-600">所有生成的题目都附带详细答案和解析，帮助学生理解解题思路，提高学习效果。</p>
-          </div>
+          // 初始化滑块事件
+          difficultySliders.forEach(slider => {
+            slider.addEventListener('input', function() {
+              updateDifficultyDisplay(this);
+              validateDifficultyDistribution();
+            });
+          });
           
-          <!-- 功能卡片4 -->
-          <div class="bg-white rounded-xl shadow-lg p-8 transform hover:-translate-y-2 transition-all duration-300">
-            <div class="w-14 h-14 bg-purple-100 rounded-full flex items-center justify-center mb-6">
-              <i class="fa fa-download text-purple-600 text-2xl"></i>
-            </div>
-            <h3 class="text-xl font-bold mb-3">便捷导出</h3>
-            <p class="text-gray-600">支持多种导出方式，可直接打印或下载为PDF、Word格式，随时随地使用学习材料。</p>
-          </div>
+          gradeBtns.forEach(btn => {
+            btn.addEventListener('click', function () {
+              gradeBtns.forEach(btn => btn.classList.remove('bg-primary/20'));
+              this.classList.add('bg-primary/20');
+              selectedGrade = this.dataset.grade;
+              selectedGradeDisplay.textContent = selectedGrade;
+              nextToStep2.disabled = false;
+            });
+          });
           
-          <!-- 功能卡片5 -->
-          <div class="bg-white rounded-xl shadow-lg p-8 transform hover:-translate-y-2 transition-all duration-300">
-            <div class="w-14 h-14 bg-indigo-100 rounded-full flex items-center justify-center mb-6">
-              <i class="fa fa-clock-o text-indigo-600 text-2xl"></i>
-            </div>
-            <h3 class="text-xl font-bold mb-3">节省时间</h3>
-            <p class="text-gray-600">自动生成题目，无需手动编写，大幅减少教师备课时间，让您有更多精力关注教学质量。</p>
-          </div>
+          nextToStep2.addEventListener('click', function () {
+            showStep(2);
+            generateSubjects(selectedGrade);
+          });
           
-          <!-- 功能卡片6 -->
-          <div class="bg-white rounded-xl shadow-lg p-8 transform hover:-translate-y-2 transition-all duration-300">
-            <div class="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mb-6">
-              <i class="fa fa-refresh text-red-600 text-2xl"></i>
-            </div>
-            <h3 class="text-xl font-bold mb-3">不断更新</h3>
-            <p class="text-gray-600">题库持续更新，紧跟教学大纲变化，确保题目内容与时俱进，符合最新教育要求。</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 题库生成器 -->
-    <section id="generator" class="py-20 bg-white">
-      <div class="container mx-auto px-4">
-        <div class="text-center mb-16">
-          <h2 class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold text-dark mb-4">开始生成你的题库</h2>
-          <p class="text-gray-600 max-w-2xl mx-auto">只需几步，即可创建符合需求的高质量练习题</p>
-        </div>
-        
-        <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
-          <!-- 步骤导航 -->
-          <div class="bg-gray-50 border-b border-gray-200">
-            <div class="flex">
-              <button class="step-btn active flex-1 py-4 px-4 text-center font-medium transition-colors" data-step="1">
-                <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-white mr-2">1</span>
-                <span>选择年级</span>
-              </button>
-              <button class="step-btn flex-1 py-4 px-4 text-center font-medium text-gray-500 transition-colors" data-step="2">
-                <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-300 text-gray-700 mr-2">2</span>
-                <span>选择科目</span>
-              </button>
-              <button class="step-btn flex-1 py-4 px-4 text-center font-medium text-gray-500 transition-colors" data-step="3">
-                <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-300 text-gray-700 mr-2">3</span>
-                <span>设置题目</span>
-              </button>
-              <button class="step-btn flex-1 py-4 px-4 text-center font-medium text-gray-500 transition-colors" data-step="4">
-                <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-300 text-gray-700 mr-2">4</span>
-                <span>生成题库</span>
-              </button>
-            </div>
-          </div>
+          backToStep1.addEventListener('click', function () {
+            showStep(1);
+          });
           
-          <!-- 步骤内容 -->
-          <div class="p-8">
-            <!-- 步骤1：选择年级 -->
-            <div class="step-content" id="step-1">
-              <h3 class="text-xl font-bold mb-6">选择年级</h3>
-              <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                <button class="grade-btn bg-gray-100 hover:bg-gray-200 p-4 rounded-lg text-center transition-colors" data-grade="幼儿园">
-                  <div class="text-2xl font-bold mb-1">幼儿园</div>
-                  <div class="text-sm text-gray-600">学前教育</div>
-                </button>
-                <button class="grade-btn bg-gray-100 hover:bg-gray-200 p-4 rounded-lg text-center transition-colors" data-grade="一年级">
-                  <div class="text-2xl font-bold mb-1">一年级</div>
-                  <div class="text-sm text-gray-600">小学低年级</div>
-                </button>
-                <button class="grade-btn bg-gray-100 hover:bg-gray-200 p-4 rounded-lg text-center transition-colors" data-grade="二年级">
-                  <div class="text-2xl font-bold mb-1">二年级</div>
-                  <div class="text-sm text-gray-600">小学低年级</div>
-                </button>
-                <button class="grade-btn bg-gray-100 hover:bg-gray-200 p-4 rounded-lg text-center transition-colors" data-grade="三年级">
-                  <div class="text-2xl font-bold mb-1">三年级</div>
-                  <div class="text-sm text-gray-600">小学中年级</div>
-                </button>
-                <button class="grade-btn bg-gray-100 hover:bg-gray-200 p-4 rounded-lg text-center transition-colors" data-grade="四年级">
-                  <div class="text-2xl font-bold mb-1">四年级</div>
-                  <div class="text-sm text-gray-600">小学中年级</div>
-                </button>
-                <button class="grade-btn bg-gray-100 hover:bg-gray-200 p-4 rounded-lg text-center transition-colors" data-grade="五年级">
-                  <div class="text-2xl font-bold mb-1">五年级</div>
-                  <div class="text-sm text-gray-600">小学高年级</div>
-                </button>
-                <button class="grade-btn bg-gray-100 hover:bg-gray-200 p-4 rounded-lg text-center transition-colors" data-grade="六年级">
-                  <div class="text-2xl font-bold mb-1">六年级</div>
-                  <div class="text-sm text-gray-600">小学高年级</div>
-                </button>
-              </div>
-              <div class="mt-8 text-right">
-                <button id="next-to-step-2" class="bg-primary text-white px-6 py-3 rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                  下一步
-                  <i class="fa fa-arrow-right ml-2"></i>
-                </button>
-              </div>
-            </div>
+          nextToStep3.addEventListener('click', function () {
+            showStep(3);
+          });
+          
+          backToStep2.addEventListener('click', function () {
+            showStep(2);
+          });
+          
+          nextToStep4.addEventListener('click', function () {
+            showStep(4);
+            generateQuestionBank();
+          });
+          
+          function showStep(step) {
+            stepBtns.forEach(btn => {
+              if (btn.dataset.step == step) {
+                btn.classList.add('active');
+                btn.classList.remove('text-gray-500');
+                btn.querySelector('span').classList.add('bg-primary', 'text-white');
+                btn.querySelector('span').classList.remove('bg-gray-300', 'text-gray-700');
+              } else {
+                btn.classList.remove('active');
+                btn.classList.add('text-gray-500');
+                btn.querySelector('span').classList.remove('bg-primary', 'text-white');
+                btn.querySelector('span').classList.add('bg-gray-300', 'text-gray-700');
+              }
+            });
             
-            <!-- 步骤2：选择科目 -->
-            <div class="step-content hidden" id="step-2">
-              <h3 class="text-xl font-bold mb-6">选择科目</h3>
-              <div id="subjects-container" class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                <!-- 科目选项将通过JavaScript动态生成 -->
-              </div>
-              <div class="mt-8 flex justify-between">
-                <button id="back-to-step-1" class="bg-gray-200 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-300 transition-colors">
-                  <i class="fa fa-arrow-left mr-2"></i>
-                  返回
-                </button>
-                <button id="next-to-step-3" class="bg-primary text-white px-6 py-3 rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                  下一步
-                  <i class="fa fa-arrow-right ml-2"></i>
-                </button>
-              </div>
-            </div>
+            stepContents.forEach(content => {
+              if (content.id == `step-${step}`) {
+                content.classList.remove('hidden');
+              } else {
+                content.classList.add('hidden');
+              }
+            });
             
-            <!-- 步骤3：设置题目 -->
-            <div class="step-content hidden" id="step-3">
-              <h3 class="text-xl font-bold mb-6">设置题目</h3>
-              
-              <div class="mb-8">
-                <h4 class="font-bold mb-4">已选条件：</h4>
-                <div class="bg-gray-50 p-4 rounded-lg">
-                  <div class="flex flex-wrap gap-3">
-                    <span class="inline-flex items-center bg-primary/10 text-primary px-3 py-1 rounded-full text-sm">
-                      <span id="selected-grade-display">年级</span>
-                      <button class="ml-1 text-primary/70 hover:text-primary" id="clear-grade">
-                        <i class="fa fa-times-circle"></i>
-                      </button>
-                    </span>
-                    <span id="selected-subjects-display" class="inline-flex flex-wrap gap-2">
-                      <!-- 已选科目将通过JavaScript动态生成 -->
-                    </span>
-                    <button id="clear-all" class="ml-auto text-sm text-gray-500 hover:text-red-500 flex items-center">
-                      <i class="fa fa-refresh mr-1"></i> 重置所有
-                    </button>
-                  </div>
-                </div>
-              </div>
-              
-              <div class="space-y-6">
-                <div>
-                  <label class="block text-gray-700 font-medium mb-2" for="question-count">题目数量</label>
-                  <input type="number" id="question-count" min="1" max="100" value="10" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
-                  <p class="text-gray-500 text-sm mt-1">请输入1-100之间的数字</p>
-                </div>
-                
-                <div>
-                  <label class="block text-gray-700 font-medium mb-2">题目类型（可多选）</label>
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <label class="flex items-center space-x-2 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                      <input type="checkbox" name="question-type" value="选择题" class="question-type-checkbox" checked>
-                      <span>选择题</span>
-                    </label>
-                    <label class="flex items-center space-x-2 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                      <input type="checkbox" name="question-type" value="填空题" class="question-type-checkbox" checked>
-                      <span>填空题</span>
-                    </label>
-                    <label class="flex items-center space-x-2 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                      <input type="checkbox" name="question-type" value="判断题" class="question-type-checkbox" checked>
-                      <span>判断题</span>
-                    </label>
-                    <label class="flex items-center space-x-2 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                      <input type="checkbox" name="question-type" value="解答题" class="question-type-checkbox" checked>
-                      <span>解答题</span>
-                    </label>
-                  </div>
-                </div>
-                
-                <div>
-                  <label class="block text-gray-700 font-medium mb-2">难度分布</label>
-                  <div class="space-y-4">
-                    <div class="flex items-center">
-                      <label class="w-24 text-gray-600">简单</label>
-                      <input type="range" min="0" max="100" value="30" class="difficulty-slider w-full mx-4" data-difficulty="easy">
-                      <span class="w-12 text-right text-gray-600" id="easy-value">30%</span>
-                    </div>
-                    <div class="flex items-center">
-                      <label class="w-24 text-gray-600">中等</label>
-                      <input type="range" min="0" max="100" value="50" class="difficulty-slider w-full mx-4" data-difficulty="medium">
-                      <span class="w-12 text-right text-gray-600" id="medium-value">50%</span>
-                    </div>
-                    <div class="flex items-center">
-                      <label class="w-24 text-gray-600">困难</label>
-                      <input type="range" min="0" max="100" value="20" class="difficulty-slider w-full mx-4" data-difficulty="hard">
-                      <span class="w-12 text-right text-gray-600" id="hard-value">20%</span>
-                    </div>
-                  </div>
-                  <p class="text-gray-500 text-sm mt-1">难度百分比总和应为100%</p>
-                </div>
-              </div>
-              
-              <div class="mt-8 flex justify-between">
-                <button id="back-to-step-2" class="bg-gray-200 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-300 transition-colors">
-                  <i class="fa fa-arrow-left mr-2"></i>
-                  返回
-                </button>
-                <button id="next-to-step-4" class="bg-primary text-white px-6 py-3 rounded-lg font-medium hover:bg-primary/90 transition-colors">
-                  生成题库
-                  <i class="fa fa-magic ml-2"></i>
-                </button>
-              </div>
-            </div>
+            // 如果是第三步，滚动到顶部
+            if (step === 3) {
+              document.getElementById('step-3').scrollIntoView({ behavior: 'smooth' });
+            }
+          }
+          
+          function generateSubjects(grade) {
+            subjectsContainer.innerHTML = '';
+            selectedSubjects = [];
+            selectedSubjectsDisplay.innerHTML = '';
+            nextToStep3.disabled = true;
             
-            <!-- 步骤4：生成结果 -->
-            <div class="step-content hidden print-area" id="step-4">
-              <h3 class="text-xl font-bold mb-6">题库生成成功</h3>
+            let subjects = [];
+            if (grade === '幼儿园') {
+              subjects = ['拼音', '数学'];
+            } else if (['一年级', '二年级'].includes(grade)) {
+              subjects = ['语文', '数学', '英语'];
+            } else {
+              subjects = ['语文', '数学', '英语', '科学'];
+            }
+            
+            subjects.forEach(subject => {
+              const subjectBtn = document.createElement('button');
+              subjectBtn.classList.add('subject-btn', 'bg-gray-100', 'hover:bg-gray-200', 'p-4', 'rounded-lg', 'text-center', 'transition-colors');
+              subjectBtn.dataset.subject = subject;
+              subjectBtn.innerHTML = `
+                <div class="text-2xl font-bold mb-1">${subject}</div>
+                <div class="text-sm text-gray-600">${grade}课程</div>
+              `;
+              subjectBtn.addEventListener('click', function () {
+                if (this.classList.contains('bg-primary/20')) {
+                  this.classList.remove('bg-primary/20');
+                  selectedSubjects = selectedSubjects.filter(s => s !== subject);
+                } else {
+                  this.classList.add('bg-primary/20');
+                  selectedSubjects.push(subject);
+                }
+                updateSelectedSubjectsDisplay();
+                nextToStep3.disabled = selectedSubjects.length === 0;
+              });
+              subjectsContainer.appendChild(subjectBtn);
+            });
+          }
+          
+          function updateSelectedSubjectsDisplay() {
+            selectedSubjectsDisplay.innerHTML = '';
+            selectedSubjects.forEach(subject => {
+              const subjectSpan = document.createElement('span');
+              subjectSpan.classList.add('inline-flex', 'items-center', 'bg-primary/10', 'text-primary', 'px-3', 'py-1', 'rounded-full', 'text-sm');
+              subjectSpan.innerHTML = `
+                ${subject}
+                <button class="ml-1 text-primary/70 hover:text-primary"><i class="fa fa-times-circle"></i></button>
+              `;
+              subjectSpan.querySelector('button').addEventListener('click', function () {
+                const subjectToRemove = subjectSpan.textContent.trim();
+                selectedSubjects = selectedSubjects.filter(s => s !== subjectToRemove);
+                updateSelectedSubjectsDisplay();
+                const subjectBtn = Array.from(subjectsContainer.children).find(btn => btn.dataset.subject === subjectToRemove);
+                subjectBtn.classList.remove('bg-primary/20');
+                nextToStep3.disabled = selectedSubjects.length === 0;
+              });
+              selectedSubjectsDisplay.appendChild(subjectSpan);
+            });
+          }
+          
+          function updateDifficultyDisplay(slider) {
+            const valueDisplay = document.getElementById(`${slider.dataset.difficulty}-value`);
+            valueDisplay.textContent = `${slider.value}%`;
+          }
+          
+          function validateDifficultyDistribution() {
+            const easy = parseInt(difficultySliders[0].value);
+            const medium = parseInt(difficultySliders[1].value);
+            const hard = parseInt(difficultySliders[2].value);
+            const total = easy + medium + hard;
+            
+            if (total !== 100) {
+              document.querySelector('#step-3 p.text-gray-500').textContent = `难度百分比总和应为100%，当前为${total}%`;
+              document.querySelector('#step-3 p.text-gray-500').classList.add('text-red-500');
+              document.querySelector('#step-3 p.text-gray-500').classList.remove('text-gray-500');
+              nextToStep4.disabled = true;
+            } else {
+              document.querySelector('#step-3 p.text-gray-500').textContent = '难度百分比总和应为100%';
+              document.querySelector('#step-3 p.text-gray-500').classList.remove('text-red-500');
+              document.querySelector('#step-3 p.text-gray-500').classList.add('text-gray-500');
+              nextToStep4.disabled = false;
+            }
+          }
+          
+          function generateQuestionBank() {
+            const questionCount = parseInt(questionCountInput.value);
+            const questionTypes = Array.from(questionTypeCheckboxes).filter(checkbox => checkbox.checked).map(checkbox => checkbox.value);
+            const easyDifficulty = parseInt(difficultySliders[0].value);
+            const mediumDifficulty = parseInt(difficultySliders[1].value);
+            const hardDifficulty = parseInt(difficultySliders[2].value);
+            
+            // 创建题库容器
+            const questionBankContainer = document.createElement('div');
+            questionBankContainer.classList.add('paper-container', 'mb-8');
+            
+            // 添加试卷标题
+            const title = document.createElement('h1');
+            title.classList.add('text-center', 'text-2xl', 'font-bold', 'mb-8');
+            title.textContent = `${selectedGrade}${selectedSubjects.join('、')}题库`;
+            questionBankContainer.appendChild(title);
+            
+            // 添加试卷信息
+            const info = document.createElement('div');
+            info.classList.add('text-center', 'text-sm', 'text-gray-600', 'mb-6');
+            info.innerHTML = `题目数量：${questionCount}题 | 难度分布：简单${easyDifficulty}%、中等${mediumDifficulty}%、困难${hardDifficulty}%`;
+            questionBankContainer.appendChild(info);
+            
+            // 按题型分组
+            const questionsByType = {};
+            questionTypes.forEach(type => {
+              questionsByType[type] = [];
+            });
+            
+            // 生成题目
+            for (let i = 0; i < questionCount; i++) {
+              const randomSubject = selectedSubjects[Math.floor(Math.random() * selectedSubjects.length)];
+              const randomQuestionType = questionTypes[Math.floor(Math.random() * questionTypes.length)];
+              const randomDifficulty = getRandomDifficulty(easyDifficulty, mediumDifficulty, hardDifficulty);
               
-              <div class="bg-gray-50 p-6 rounded-lg mb-8">
-                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 no-print">
-                  <div>
-                    <h4 class="font-bold text-lg">
-                      <span id="result-grade">年级</span>
-                      <span id="result-subject">科目</span>
-                      练习题
-                    </h4>
-                    <p class="text-gray-600">共 <span id="result-count">0</span> 道题目</p>
-                  </div>
-                  <div class="flex flex-wrap gap-3">
-                    <button id="download-pdf" class="bg-red-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-700 transition-colors flex items-center">
-                      <i class="fa fa-file-pdf-o mr-2"></i> 下载PDF
-                    </button>
-                    <button id="download-word" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center">
-                      <i class="fa fa-file-word-o mr-2"></i> 下载Word
-                    </button>
-                    <button id="print-questions" class="bg-gray-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors flex items-center">
-                      <i class="fa fa-print mr-2"></i> 打印
-                    </button>
-                  </div>
-                </div>
+              let question = generateCartoonQuestion(randomSubject, randomQuestionType, randomDifficulty);
+              questionsByType[randomQuestionType].push({
+                subject: randomSubject,
+                question: question,
+                difficulty: randomDifficulty
+              });
+            }
+            
+            // 按题型添加题目
+            let questionNumber = 1;
+            for (const [type, questions] of Object.entries(questionsByType)) {
+              if (questions.length > 0) {
+                // 添加题型标题
+                const typeTitle = document.createElement('h2');
+                typeTitle.classList.add('text-xl', 'font-bold', 'mt-8', 'mb-4', 'border-b', 'pb-2');
+                typeTitle.textContent = `${type}（共${questions.length}题）`;
+                questionBankContainer.appendChild(typeTitle);
                 
-                <!-- 题目预览 -->
-                <div class="border-t border-gray-200 pt-6">
-                  <h5 class="font-bold mb-4">题目预览</h5>
-                  <div id="questions-preview" class="space-y-6 print-container">
-                    <!-- 题目将通过JavaScript动态生成 -->
-                  </div>
+                // 添加题目
+                questions.forEach(q => {
+                  const questionDiv = document.createElement('div');
+                  questionDiv.classList.add('mb-6', 'p-4', 'border', 'border-gray-200', 'rounded-lg', 'bg-gray-50');
                   
-                  <div class="mt-8 text-center no-print">
-                    <button id="show-answers" class="bg-secondary text-white px-6 py-3 rounded-lg font-medium hover:bg-secondary/90 transition-colors">
-                      查看答案和解析
-                      <i class="fa fa-eye ml-2"></i>
-                    </button>
-                  </div>
+                  // 题目编号和内容
+                  const questionContent = document.createElement('p');
+                  questionContent.classList.add('font-medium', 'mb-2');
+                  questionContent.innerHTML = `题目 ${questionNumber}：${q.question}`;
+                  questionDiv.appendChild(questionContent);
                   
-                  <div id="answers-section" class="mt-8 hidden print-container">
-                    <div class="border-t border-gray-200 pt-6">
-                      <h5 class="font-bold mb-4">答案与解析</h5>
-                      <div id="answers-preview" class="space-y-6">
-                        <!-- 答案将通过JavaScript动态生成 -->
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+                  // 题目科目和难度
+                  const meta = document.createElement('p');
+                  meta.classList.add('text-sm', 'text-gray-500');
+                  meta.innerHTML = `${q.subject} | <span class="${getDifficultyClass(q.difficulty)}">${q.difficulty}</span>`;
+                  questionDiv.appendChild(meta);
+                  
+                  questionBankContainer.appendChild(questionDiv);
+                  questionNumber++;
+                });
+              }
+            }
+            
+            // 清空步骤4并添加题库
+            const step4 = document.getElementById('step-4');
+            step4.innerHTML = '';
+            step4.appendChild(questionBankContainer);
+            
+            // 添加下载选项
+            const downloadContainer = document.createElement('div');
+            downloadContainer.classList.add('flex', 'flex-col', 'md:flex-row', 'justify-center', 'items-center', 'gap-4', 'mt-8');
+            
+            // 文件格式选择
+            const formatSelect = document.createElement('select');
+            formatSelect.id = 'file-format';
+            formatSelect.classList.add('px-4', 'py-2', 'border', 'border-gray-300', 'rounded-lg', 'focus:ring-2', 'focus:ring-primary', 'focus:border-primary');
+            formatSelect.innerHTML = `
+              <option value="pdf">PDF格式</option>
+              <option value="word">Word格式</option>
+              <option value="txt">纯文本格式</option>
+            `;
+            downloadContainer.appendChild(formatSelect);
+            
+            // 下载按钮
+            const downloadBtn = document.createElement('button');
+            downloadBtn.classList.add('bg-primary', 'text-white', 'px-6', 'py-3', 'rounded-lg', 'font-medium', 'hover:bg-primary/90', 'transition-colors');
+            downloadBtn.innerHTML = '<i class="fa fa-download mr-2"></i>下载题库';
+            downloadBtn.addEventListener('click', function () {
+              const format = formatSelect.value;
+              const fileName = `${selectedGrade}-${selectedSubjects.join('、')}题库.${format}`;
               
-              <div class="flex justify-center no-print">
-                <button id="generate-another" class="bg-primary text-white px-8 py-3 rounded-lg font-medium hover:bg-primary/90 transition-colors">
-                  <i class="fa fa-refresh mr-2"></i>
-                  生成新题库
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 关于我们 -->
-    <section id="about" class="py-20 bg-gray-50">
-      <div class="container mx-auto px-4">
-        <div class="text-center mb-16">
-          <h2 class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold text-dark mb-4">关于我们</h2>
-          <p class="text-gray-600 max-w-2xl mx-auto">我们致力于为教育工作者和学生提供高质量的学习资源</p>
-        </div>
-        
-        <div class="max-w-4xl mx-auto">
-          <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
-            <div class="md:flex">
-              <div class="md:w-1/3 bg-primary p-8 flex items-center justify-center">
-                <div class="text-center text-white">
-                  <i class="fa fa-lightbulb-o text-5xl mb-4"></i>
-                  <h3 class="text-xl font-bold mb-2">我们的使命</h3>
-                  <p class="opacity-90">提供便捷、高效的教育工具，帮助学生和教师实现更好的学习效果</p>
-                </div>
-              </div>
-              <div class="md:w-2/3 p-8">
-                <p class="text-gray-700 mb-4">
-                  中小学题库生成器是一款专为教育工作者和学生设计的工具，旨在简化题库创建过程，提高学习效率。我们的题库覆盖从幼儿园到小学六年级的所有主要科目，内容丰富且不断更新。
-                </p>
-                <p class="text-gray-700 mb-4">
-                  我们相信，优质的教育资源应该是便捷可得的。通过我们的平台，教师可以节省大量时间用于备课，学生可以获得更多针对性的练习材料，从而提升学习效果。
-                </p>
-                <p class="text-gray-700">
-                  如果您在使用过程中有任何问题或建议，欢迎随时联系我们，我们将竭诚为您服务。
-                </p>
-              </div>
-            </div>
-          </div>
+              if (format === 'pdf') {
+                downloadAsPDF(questionBankContainer, fileName);
+              } else if (format === 'word') {
+                downloadAsWord(questionBankContainer, fileName);
+              } else {
+                downloadAsText(questionBankContainer, fileName);
+              }
+              
+              // 重置题库生成器
+              setTimeout(() => {
+                resetGenerator();
+              }, 1000);
+            });
+            downloadContainer.appendChild(downloadBtn);
+            
+            // 重置按钮
+            const resetBtn = document.createElement('button');
+            resetBtn.classList.add('bg-gray-200', 'text-gray-700', 'px-6', 'py-3', 'rounded-lg', 'font-medium', 'hover:bg-gray-300', 'transition-colors');
+            resetBtn.innerHTML = '<i class="fa fa-refresh mr-2"></i>重新生成';
+            resetBtn.addEventListener('click', resetGenerator);
+            downloadContainer.appendChild(resetBtn);
+            
+            step4.appendChild(downloadContainer);
+            
+            // 保存当前题库内容
+            currentQuestionBank = questionBankContainer.innerHTML;
+          }
           
-          <div class="mt-12 text-center">
-            <h3 class="text-xl font-bold mb-6">常见问题</h3>
-            <div class="space-y-4">
-              <div class="bg-white p-6 rounded-xl shadow-md">
-                <h4 class="font-bold mb-2 flex justify-between items-center">
-                  <span>题库中的题目来源是什么？</span>
-                  <i class="fa fa-chevron-down text-gray-400 question-toggle"></i>
-                </h4>
-                <div class="question-answer hidden">
-                  <p class="text-gray-600">
-                    我们的题库由教育专家精心编写，内容符合国家教育大纲要求，覆盖各年级各学科的重点知识点。所有题目都经过严格审核，确保质量和准确性。
-                  </p>
-                </div>
-              </div>
+          function getRandomDifficulty(easy, medium, hard) {
+            const random = Math.random() * 100;
+            if (random < easy) {
+              return '简单';
+            } else if (random < easy + medium) {
+              return '中等';
+            } else {
+              return '困难';
+            }
+          }
+          
+          function getDifficultyClass(difficulty) {
+            switch(difficulty) {
+              case '简单':
+                return 'text-green-600';
+              case '中等':
+                return 'text-yellow-600';
+              case '困难':
+                return 'text-red-600';
+              default:
+                return 'text-gray-600';
+            }
+          }
+          
+          function generateCartoonQuestion(subject, questionType, difficulty) {
+            let question = '';
+            
+            // 拼音题库
+            if (subject === '拼音') {
+              const pinyinMap = {
+                '简单': [
+                  { question: '“爸爸”的拼音是 ______。', answer: 'bà ba' },
+                  { question: '“妈妈”的拼音是 ______。', answer: 'mā ma' },
+                  { question: '“苹果”的拼音是 ______。', answer: 'píng guǒ' },
+                  { question: '“学校”的拼音是 ______。', answer: 'xué xiào' },
+                  { question: '“老师”的拼音是 ______。', answer: 'lǎo shī' }
+                ],
+                '中等': [
+                  { question: '“朋友”的拼音是 ______。', answer: 'péng you' },
+                  { question: '“快乐”的拼音是 ______。', answer: 'kuài lè' },
+                  { question: '“唱歌”的拼音是 ______。', answer: 'chàng gē' },
+                  { question: '“跳舞”的拼音是 ______。', answer: 'tiào wǔ' },
+                  { question: '“书本”的拼音是 ______。', answer: 'shū běn' }
+                ],
+                '困难': [
+                  { question: '“美丽”的拼音是 ______。', answer: 'měi lì' },
+                  { question: '“早晨”的拼音是 ______。', answer: 'zǎo chen' },
+                  { question: '“晚安”的拼音是 ______。', answer: 'wǎn ān' },
+                  { question: '“学习”的拼音是 ______。', answer: 'xué xí' },
+                  { question: '“聪明”的拼音是 ______。', answer: 'cōng míng' }
+                ]
+              };
               
-              <div class="bg-white p-6 rounded-xl shadow-md">
-                <h4 class="font-bold mb-2 flex justify-between items-center">
-                  <span>生成的题目可以修改或编辑吗？</span>
-                  <i class="fa fa-chevron-down text-gray-400 question-toggle"></i>
-                </h4>
-                <div class="question-answer hidden">
-                  <p class="text-gray-600">
-                    目前我们提供了基本的题目定制选项，如难度分布、题目类型等。未来我们计划推出更高级的编辑功能，允许用户直接修改生成的题目内容。
-                  </p>
-                </div>
-              </div>
+              const choicesMap = {
+                '简单': [
+                  { question: '“花朵”的拼音是（  ）A. huā duǒ  B. huǒ duǒ', answer: 'A' },
+                  { question: '“小鸟”的拼音是（  ）A. xiǎo niǎo  B. xiǎo yǎo', answer: 'A' },
+                  { question: '“太阳”的拼音是（  ）A. tài yáng  B. dà yáng', answer: 'A' },
+                  { question: '“月亮”的拼音是（  ）A. yuè liàng  B. yù liàng', answer: 'A' },
+                  { question: '“星星”的拼音是（  ）A. xīng xing  B. xīn xing', answer: 'A' }
+                ],
+                '中等': [
+                  { question: '“绿色”的拼音是（  ）A. lǜ sè  B. nǜ sè', answer: 'A' },
+                  { question: '“黄色”的拼音是（  ）A. huáng sè  B. fáng sè', answer: 'A' },
+                  { question: '“红色”的拼音是（  ）A. hóng sè  B. fēng sè', answer: 'A' },
+                  { question: '“蓝色”的拼音是（  ）A. lán sè  B. nán sè', answer: 'A' },
+                  { question: '“白色”的拼音是（  ）A. bái sè  B. pái sè', answer: 'A' }
+                ],
+                '困难': [
+                  { question: '“铅笔”的拼音是（  ）A. qiān bǐ  B. jiān bǐ', answer: 'A' },
+                  { question: '“橡皮”的拼音是（  ）A. xiàng pí  B. xiàn pí', answer: 'A' },
+                  { question: '“尺子”的拼音是（  ）A. chǐ zi  B. cǐ zi', answer: 'A' },
+                  { question: '“书包”的拼音是（  ）A. shū bāo  B. sū bāo', answer: 'A' },
+                  { question: '“作业”的拼音是（  ）A. zuò yè  B. zhuò yè', answer: 'A' }
+                ]
+              };
               
-              <div class="bg-white p-6 rounded-xl shadow-md">
-                <h4 class="font-bold mb-2 flex justify-between items-center">
-                  <span>是否支持批量生成多套试卷？</span>
-                  <i class="fa fa-chevron-down text-gray-400 question-toggle"></i>
-                </h4>
-                <div class="question-answer hidden">
-                  <p class="text-gray-600">
-                    是的，我们支持批量生成功能。您可以设置不同的参数，一次性生成多套不同的试卷，满足不同场景的需求。
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <!-- 页脚 -->
-  <footer class="bg-dark text-white py-12">
-    <div class="container mx-auto px-4">
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-        <div>
-          <div class="flex items-center space-x-2 mb-4">
-            <i class="fa fa-graduation-cap text-primary text-2xl"></i>
-            <span class="text-xl font-bold">幼小中学题库生成器</span>
-          </div>
-          <p class="text-gray-400 mb-4">
-            为教育工作者和学生提供高质量的题库生成服务，助力高效学习。
-          </p>
-          <div class="flex space-x-4">
-            <a href="#" class="text-gray-400 hover:text-white transition-colors">
-              <i class="fa fa-weixin text-xl"></i>
-            </a>
-            <a href="#" class="text-gray-400 hover:text-white transition-colors">
-              <i class="fa fa-weibo text-xl"></i>
-            </a>
-            <a href="#" class="text-gray-400 hover:text-white transition-colors">
-              <i class="fa fa-envelope-o text-xl"></i>
-            </a>
-          </div>
-        </div>
-        
-        <div>
-          <h4 class="text-lg font-bold mb-4">快速链接</h4>
-          <ul class="space-y-2">
-            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">首页</a></li>
-            <li><a href="#features" class="text-gray-400 hover:text-white transition-colors">功能介绍</
+              if (questionType === '选择题') {
+                const randomIndex = Math.floor(Math.random() * choicesMap[difficulty].length);
+                return choicesMap[difficulty][randomIndex].question;
+              } else if (questionType === '填空题') {
+                const randomIndex = Math.floor(Math.random() * pinyinMap[difficulty].length);
+                return pinyinMap[difficulty][randomIndex].question;
+              }
+            }
+            
+            // 数学题库
+            else if (subject === '数学') {
+              if (['幼儿园', '一年级', '二年级'].includes(selectedGrade)) {
+                // 低年级数学题库
+                const mathMap = {
+                  '简单': [
+                    { question: '2 + 3 = ______', answer: '5' },
+                    { question: '5 - 1 = ______', answer: '4' },
+                    { question: '4 + 1 = ______', answer: '5' },
+                    { question: '6 - 3 = ______', answer: '3' },
+                    { question: '3 + 2 = ______', answer: '5' }
+                  ],
+                  '中等': [
+                    { question: '7 - 4 = ______', answer: '3' },
+                    { question: '2 + 6 = ______', answer: '8' },
+                    { question: '9 - 5 = ______', answer: '4' },
+                    { question: '3 + 4 = ______', answer: '7' },
+                    { question: '8 - 2 = ______', answer: '6' }
+                  ],
+                  '困难': [
+                    { question: '5 + 4 = ______', answer: '9' },
+                    { question: '10 - 3 = ______', answer: '7' },
+                    { question: '6 + 3 = ______', answer: '9' },
+                    { question: '9 - 4 = ______', answer: '5' },
+                    { question: '4 + 5 = ______', answer: '9' }
+                  ]
+                };
+                
+                const mathChoicesMap = {
+                  '简单': [
+                    { question: '3 + 4 = （  ）A. 5  B. 6  C. 7', answer: 'C' },
+                    { question: '8 - 5 = （  ）A. 2  B. 3  C. 4', answer: 'B' },
+                    { question: '2 + 5 = （  ）A. 6  B. 7  C. 8', answer: 'B' },
+                    { question: '7 - 3 = （  ）A. 3  B. 4  C. 5', answer: 'B' },
+                    { question: '4 + 3 = （  ）A. 6  B. 7  C. 8', answer: 'B' }
+                  ],
+                  '中等': [
+                    { question: '9 - 6 = （  ）A. 2  B. 3  C. 4', answer: 'B' },
+                    { question: '5 + 3 = （  ）A. 7  B. 8  C. 9', answer: 'B' },
+                    { question: '10 - 4 = （  ）A. 5  B. 6  C. 7', answer: 'B' },
+                    { question: '3 + 5 = （  ）A. 7  B. 8  C. 9', answer: 'B' },
+                    { question: '8 - 3 = （  ）A. 4  B. 5  C. 6', answer: 'B' }
+                  ],
+                  '困难': [
+                    { question: '6 + 4 = （  ）A. 8  B. 9  C. 10', answer: 'C' },
+                    { question: '10 - 5 = （  ）A. 4  B. 5  C. 6', answer: 'B' },
+                    { question: '7 + 3 = （  ）A. 9  B. 10  C. 11', answer: 'B' },
+                    { question: '10 - 2 = （  ）A. 7  B. 8  C. 9', answer: 'B' },
+                    { question: '5 + 5 = （  ）A. 9  B. 10  C. 11', answer: 'B' }
+                  ]
+                };
+                
+                if (questionType === '选择题') {
+                  const randomIndex = Math.floor(Math.random() * mathChoicesMap[difficulty].length);
+                  return mathChoicesMap[difficulty][randomIndex].question;
+                } else if (questionType === '填空题') {
+                  const randomIndex = Math.floor(Math.random() * mathMap[difficulty].length);
+                  return mathMap[difficulty][randomIndex].question;
+                }
+              } else {
+                // 高年级数学题库
+                const mathMap = {
+                  '简单': [
+                    { question: '长方形的长是5厘米，宽是3厘米，它的周长是 ______ 厘米。', answer: '16' },
+                    { question: '小明有10个苹果，给了小红3个，还剩下 ______ 个。', answer: '7' },
+                    { question: '36 ÷ 4 = ______', answer: '9' },
+                    { question: '5 × 6 = ______', answer: '30' },
+                    { question: '1米 = ______ 厘米', answer: '100' }
+                  ],
+                  '中等': [
+                    { question: '一个三角形的底是6厘米，高是4厘米，它的面积是 ______ 平方厘米。', answer: '12' },
+                    { question: '小华买了3支铅笔，每支2元，一共花了 ______ 元。', answer: '6' },
+                    { question: '48 ÷ 6 = ______', answer: '8' },
+                    { question: '7 × 8 = ______', answer: '56' },
+                    { question: '1小时 = ______ 分钟', answer: '60' }
+                  ],
+                  '困难': [
+                    { question: '一个圆柱的底面半径是3厘米，高是5厘米，它的体积是 ______ 立方厘米。（π取3.14）', answer: '141.3' },
+                    { question: '小李从家到学校要走15分钟，如果他早上7:30从家出发，______ 到达学校。', answer: '7:45' },
+                    { question: '56 ÷ 7 = ______', answer: '8' },
+                    { question: '9 × 7 = ______', answer: '63' },
+                    { question: '1千克 = ______ 克', answer: '1000' }
+                  ]
+                };
+                
+                const mathChoicesMap = {
+                  '简单': [
+                    { question: '12 ÷ 3 = （  ）A. 3  B. 4  C. 5', answer: 'B' },
+                    { question: '4 × 6 = （  ）A. 20  B. 24  C. 28', answer: 'B' },
+                    { question: '正方形的边长是4厘米，它的周长是（  ）厘米。A. 12  B. 16  C. 20', answer: 'B' },
+                    { question: '30 ÷ 5 = （  ）A. 5  B. 6  C. 7', answer: 'B' },
+                    { question: '5 × 7 = （  ）A. 30  B. 35  C. 40', answer: 'B' }
+                  ],
+                  '中等': [
+                    { question: '24 ÷ 4 = （  ）A. 5  B. 6  C. 7', answer: 'B' },
+                    { question: '6 × 8 = （  ）A. 42  B. 48  C. 54', answer: 'B' },
+                    { question: '一个长方形的长是7厘米，宽是3厘米，它的面积是（  ）平方厘米。A. 21  B. 24  C. 28', answer: 'A' },
+                    { question: '45 ÷ 9 = （  ）A. 4  B. 5  C. 6', answer: 'B' },
+                    { question: '7 × 9 = （  ）A. 56  B. 63  C. 70', answer: 'B' }
+                  ],
+                  '困难': [
+                    { question: '56 ÷ 8 = （  ）A. 6  B. 7  C. 8', answer: 'B' },
+                    { question: '8 × 9 = （  ）A. 64  B. 72  C. 80', answer: 'B' },
+                    { question: '一个圆的半径是3厘米，它的周长是（  ）厘米。（π取3.14）A. 18.84  B. 28.26  C. 9.42', answer: 'A' },
+                    { question: '72 ÷ 9 = （  ）A. 7  B. 8  C. 9', answer: 'B' },
+                    { question: '9 × 9 = （  ）A. 72  B. 81  C. 90', answer: 'B' }
+                  ]
+                };
+                
+                if (questionType === '选择题') {
+                  const randomIndex = Math.floor(Math.random() * mathChoicesMap[difficulty].length);
+                  return mathChoicesMap[difficulty][randomIndex].question;
+                } else if (questionType === '填空题') {
+                  const randomIndex = Math.floor(Math.random() * mathMap[difficulty].length);
+                  return mathMap[difficulty][randomIndex].question;
+                }
+              }
+            }
+            
+            // 英语题库
+            else if (subject === '英语') {
+              const englishMap = {
+                '简单': [
+                  { question: '“苹果”的英文是 ______。', answer: 'apple' },
+                  { question: '“猫”的英文是 ______。', answer: 'cat' },
+                  { question: '“狗”的英文是 ______。', answer: 'dog' },
+                  { question: '“书”的英文是 ______。', answer: 'book' },
+                  { question: '“笔”的英文是 ______。', answer: 'pen' }
+                ],
+                '中等': [
+                  { question: '“红色”的英文是 ______。', answer: 'red' },
+                  { question: '“蓝色”的英文是 ______。', answer: 'blue' },
+                  { question: '“绿色”的英文是 ______。', answer: 'green' },
+                  { question: '“黄色”的英文是 ______。', answer: 'yellow' },
+                  { question: '“白色”的英文是 ______。', answer: 'white' }
+                ],
+                '困难': [
+                  { question: '“早上好”的英文是 ______。', answer: 'good morning' },
+                  { question: '“谢谢你”的英文是 ______。', answer: 'thank you' },
+                  { question: '“再见”的英文是 ______。', answer: 'goodbye' },
+                  { question: '“我爱你”的英文是 ______。', answer: 'I love you' },
+                  { question: '“请”的英文是 ______。', answer: 'please' }
+                ]
+              };
+              
+              const englishChoicesMap = {
+                '简单': [
+                  { question: '“香蕉”的英文是（  ）A. apple  B. banana  C. orange', answer: 'B' },
+                  { question: '“鸟”的英文是（  ）A. bird  B. cat  C. dog', answer: 'A' },
+                  { question: '“鱼”的英文是（  ）A. fish  B. bird  C. cat', answer: 'A' },
+                  { question: '“帽子”的英文是（  ）A. hat  B. cat  C. dog', answer: 'A' },
+                  { question: '“桌子”的英文是（  ）A. table  B. chair  C. bed', answer: 'A' }
+                ],
+                '中等': [
+                  { question: '“黑色”的英文是（  ）A. black  B. blue  C. brown', answer: 'A' },
+                  { question: '“粉色”的英文是（  ）A. purple  B. pink  C. orange', answer: 'B' },
+                  { question: '“紫色”的英文是（  ）A. purple  B. pink  C. orange', answer: 'A' },
+                  { question: '“橙色”的英文是（  ）A. purple  B. pink  C. orange', answer: 'C' },
+                  { question: '“棕色”的英文是（  ）A. black  B. blue  C. brown', answer: 'C' }
+                ],
+                '困难': [
+                  { question: '“你好吗？”的英文是（  ）A. How are you?  B. What\'s your name?  C. Goodbye.', answer: 'A' },
+                  { question: '“我叫小明。”的英文是（  ）A. My name is Xiaoming.  B. I am Xiaoming.  C. Both A and B.', answer: 'C' },
+                  { question: '“这是什么？”的英文是（  ）A. What\'s this?  B. What\'s that?  C. Who\'s this?', answer: 'A' },
+                  { question: '“那是什么？”的英文是（  ）A. What\'s this?  B. What\'s that?  C. Who\'s that?', answer: 'B' },
+                  { question: '“几点了？”的英文是（  ）A. What\'s your name?  B. What time is it?  C. How old are you?', answer: 'B' }
+                ]
+              };
+              
+              if (questionType === '选择题') {
+                const randomIndex = Math.floor(Math.random() * englishChoicesMap[difficulty].length);
+                return englishChoicesMap[difficulty][randomIndex].question;
+              } else if (questionType === '填空题') {
+                const randomIndex = Math.floor(Math.random() * englishMap[difficulty].length);
+                return englishMap[difficulty][randomIndex].question;
+              }
+            }
+            
+            // 科学题库
+            else if (subject === '科学') {
+              const scienceMap = {
+                '简单': [
+                  { question: '太阳从 ______ 方升起。', answer: '东' },
+                  { question: '一年有 ______ 个季节。', answer: '4' },
+                  { question: '水在 ______℃ 时会沸腾。', answer: '100' },
+                  { question: '人类有 ______ 条腿。', answer: '2' },
+                  { question: '猫有 ______ 条腿。', answer: '4' }
+                ],
+                '中等': [
+                  { question: '植物通过 ______ 进行光合作用。', answer: '叶子' },
+                  { question: '地球围绕 ______ 旋转。', answer: '太阳' },
+                  { question: '月亮本身 ______ 发光。（填“会”或“不会”）', answer: '不会' },
+                  { question: '人体最大的器官是 ______。', answer: '皮肤' },
+                  { question: '空气中含量最多的气体是 ______。', answer: '氮气' }
+                ],
+                '困难': [
+                  { question: '太阳系中最大的行星是 ______。', answer: '木星' },
+                  { question: '声音在 ______ 中传播速度最快。（填“固体”、“液体”或“气体”）', answer: '固体' },
+                  { question: '光合作用的产物是 ______ 和氧气。', answer: '葡萄糖' },
+                  { question: '人体的血液循环系统由心脏、血管和 ______ 组成。', answer: '血液' },
+                  { question: '电的单位是 ______。', answer: '安培' }
+                ]
+              };
+              
+              const scienceChoicesMap = {
+                '简单': [
+                  { question: '下列哪种动物会飞？（  ）A. 猫  B. 狗  C. 鸟', answer: 'C' },
+                  { question: '水在0℃时会（  ）A. 沸腾  B. 结冰  C. 蒸发', answer: 'B' },
+                  { question: '下列哪种是水果？（  ）A. 胡萝卜  B. 苹果  C. 土豆', answer: 'B' },
+                  { question: '下列哪种是蔬菜？（  ）A. 香蕉  B. 西红柿  C. 葡萄', answer: 'B' },
+                  { question: '下列哪种是动物？（  ）A. 树  B. 花  C. 鱼', answer: 'C' }
+                ],
+                '中等': [
+                  { question: '下列哪种是哺乳动物？（  ）A. 鸟  B. 鱼  C. 猫', answer: 'C' },
+                  { question: '下列哪种是爬行动物？（  ）A. 青蛙  B. 蛇  C. 鸟', answer: 'B' },
+                  { question: '下列哪种是昆虫？（  ）A. 蜘蛛  B. 蚂蚁  C. 蜗牛', answer: 'B' },
+                  { question: '下列哪种是两栖动物？（  ）A. 蛇  B. 青蛙  C. 乌龟', answer: 'B' },
+                  { question: '下列哪种是鱼类？（  ）A. 海豚  B. 鲨鱼  C. 鲸鱼', answer: 'B' }
+                ],
+                '困难': [
+                  { question: '下列哪种是可再生能源？（  ）A. 石油  B. 太阳能  C. 煤炭', answer: 'B' },
+                  { question: '下列哪种是化学变化？（  ）A. 水结冰  B. 铁生锈  C. 盐溶解', answer: 'B' },
+                  { question: '下列哪种是物理变化？（  ）A. 燃烧木材  B. 水沸腾  C. 食物腐烂', answer: 'B' },
+                  { question: '下列哪种是导体？（  ）A. 木头  B. 铜  C. 塑料', answer: 'B' },
+                  { question: '下列哪种是绝缘体？（  ）A. 铁  B. 玻璃  C. 铝', answer: 'B' }
+                ]
+              };
+              
+              if (questionType === '选择题') {
+                const randomIndex = Math.floor(Math.random() * scienceChoicesMap[difficulty].length);
+                return scienceChoicesMap[difficulty][randomIndex].question;
+              } else if (questionType === '填空题') {
+                const randomIndex = Math.floor(Math.random() * scienceMap[difficulty].length);
+                return scienceMap[difficulty][randomIndex].question;
+              }
+            }
+            
+            return question;
+          }
+          
+          function downloadAsPDF(element, fileName) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({
+              orientation: 'portrait',
+              unit: 'mm',
+              format: 'a4'
+            });
+            
+            html2canvas(element, { scale: 2 }).then(canvas => {
+              const imgData = canvas.toDataURL('image/png');
+              const imgWidth = 210;
+              const imgHeight = canvas.height * imgWidth / canvas.width;
+              
+              doc.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+              doc.save(fileName);
+            });
+          }
+          
+          function downloadAsWord(element, fileName) {
+            const htmlContent = `
+              <html xmlns:o="urn:schemas-microsoft-com:office:office" 
+                    xmlns:w="urn:schemas-microsoft-com:office:word" 
+                    xmlns="http://www.w3.org/TR/REC-html40">
+                <head>
+                  <meta charset="UTF-8">
+                  <title>${fileName}</title>
+                  <style>
+                    body { font-family: 'Microsoft YaHei', sans-serif; }
+                    h1 { text-align: center; }
+                    .question { margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+                    .meta { font-size: 12px; color: #666; }
+                    .easy { color: green; }
+                    .medium { color: orange; }
+                    .hard { color: red; }
+                  </style>
+                </head>
+                <body>
+                  ${element.innerHTML}
+                </body>
+              </html>
+            `;
+            
+            const blob = new Blob(['\ufeff', htmlContent], { type: 'application/msword' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+          }
+          
+          function downloadAsText(element, fileName) {
+            let textContent = '';
+            
+            // 获取标题
+            const title = element.querySelector('h1').textContent;
+            textContent += `${title}\n\n`;
+            
+            // 获取信息
+            const info = element.querySelector('div.text-center.text-sm').textContent;
+            textContent += `${info}\n\n`;
+            
+            // 获取所有题目
+            const questions = element.querySelectorAll('div.mb-6');
+            questions.forEach((question, index) => {
+              const questionText = question.querySelector('p.font-medium').textContent;
+              const meta = question.querySelector('p.text-sm').textContent;
+              
+              textContent += `${questionText}\n${meta}\n\n`;
+            });
+            
+            const blob = new Blob([textContent], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
